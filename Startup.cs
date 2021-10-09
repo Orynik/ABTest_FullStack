@@ -1,10 +1,14 @@
+using ABTest_FullStack.Context;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace ABTest_FullStack
 {
@@ -20,7 +24,6 @@ namespace ABTest_FullStack
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
@@ -28,6 +31,8 @@ namespace ABTest_FullStack
             {
                 configuration.RootPath = "ClientApp/build";
             });
+
+            services.AddDbContext<UserContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
