@@ -1,4 +1,6 @@
 ﻿import React, { Component } from 'react';
+import { sendData, getData } from "../api/dotnetApi.js"
+import { Table } from "./table.js"
 
 export class RollingRetentionTable extends Component {
     static displayName = RollingRetentionTable.name;
@@ -6,21 +8,17 @@ export class RollingRetentionTable extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isToggleOn: true,
             error: null,
-            items: []
+            items: [],
+            isLoaded: false
         }
-        // Это привязывание необходимо, чтобы работал объект `this` в колбэке
-        this.handleSave = this.handleSave.bind(this);
-    }
-
-    componentDidMount(){
-        fetch("https://localhost:" + window.location.port + "/Table").then(res => res.json()).then(
+  
+        getData().then(
             (result) => {
+                console.log(result)
                 this.setState({
                     items: result
                 })
-                console.log(result);
             },
             (error) => {
                 this.setState({
@@ -28,17 +26,74 @@ export class RollingRetentionTable extends Component {
                 })
             },
         );
+
+        // Это привязка необходима, для работы объекта `this` в колбэке
+        this.handleSave = this.handleSave.bind(this);
+    }
+
+    componentDidMount() {
+        getData().then(
+            (result) => {
+                this.setState({
+                    items: result,
+                    isLoaded: true
+                })
+            },
+            (error) => {
+                this.setState({
+                    error,
+                    isLoaded: true
+                })
+            },
+        )
     }
 
     handleSave() {
-        let DateRegistration = document.getElementsByClassName("dateInput")[0];
-        let DateLastActivity = document.getElementsByClassName("dateInput")[1];
+        let DateRegistration = document.getElementsByClassName("dateInputCreate")[0].value;
+        let DateLastActivity = document.getElementsByClassName("dateInputCreate")[1].value;
+
+        let validationMesage = this.validation(DateRegistration, DateLastActivity);
+
+        if (validationMesage == null) {
+            sendData({
+                DateRegistration,
+                DateLastActivity
+            }).then()
+
+        } else {
+            alert(validationMesage)
+        }
     }
 
-    render() {
+
+
+    /**
+     * Проверяет входные даты и в случае ошибки возвращает сформированное сообщение с ошибкой
+     * 
+     * @param {int} DateRegistration
+     * @param {int} DateLastActivity
+     */
+    validation(DateRegistration, DateLastActivity) {
+
+        let firstDate = new Date(DateRegistration).valueOf();
+        let secondDate = new Date(DateLastActivity).valueOf();
+
+        if (!(isNaN(firstDate) || isNaN(secondDate))) {
+            if (firstDate > secondDate) {
+                return "Дата посещения не может быть раньше даты регистрации";
+            }
+            return null
+        }
+
+        return "Введите даты,согласно шаблону";
+    }
+
+render() {
+    const { isLoaded, items, error } = this.state;
         return (
             <div>
-                <table class="RollingTable" border="1">
+                <table className="RollingTable" border="1">
+                    <thead>
                         <tr>
                             <td>
                                 UserID
@@ -50,20 +105,24 @@ export class RollingRetentionTable extends Component {
                                 Date Last Activity
                             </td>
                         </tr>
+                    </thead>
+                    <tbody
+                        <Table />
                         <tr>
                             <td>
                                 *
                             </td>
                             <td>
-                                <input class = "dateInput DateRegistrationInput" type="date"/>
+                                <input className="dateInput dateInputCreate DateRegistrationInput" type="date" />
                             </td>
                             <td>
-                                <input type="dateInput DateLastActivityInput" type="date"/>
+                                <input className="dateInput dateInputCreate DateLastActivityInput" type="date" />
                             </td>
                         </tr>
+                    </tbody>
                 </table>
-                <button class="Save" onClick={this.handleSave}>Save</button>
-                <button class="Calculate">Calculate</button>
+                <button className="Save" onClick={this.handleSave}>Save</button>
+                <button className="Calculate">Calculate</button>
             </div>
         )
     }
